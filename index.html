@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <main class="flex items-center justify-center">
+      <div class="mimxGridR">
+        <div class="screen flex">
+          <div class="flex items-center">
+            <div id="previousOperand" class="flex">0</div>
+            <span id="operation"></span>
+          </div>
+          <div id="warning_or_result">Cannot divide by zero</div>
+          <div id="currentOperand"></div>
+        </div>
+        <button class="col-span-2" onclick="deleteAllFun(true)">AC</button>
+        <button onclick="deleteFun()">DEL</button>
+        <button onclick="operationFun('*')">*</button>
+
+        <button class="nums" onclick="numsFun(1)">1</button>
+        <button class="nums" onclick="numsFun(2)">2</button>
+        <button class="nums" onclick="numsFun(3)">3</button>
+
+        <button onclick="operationFun('÷')">÷</button>
+
+        <button class="nums" onclick="numsFun(4)">4</button>
+        <button class="nums" onclick="numsFun(5)">5</button>
+        <button class="nums" onclick="numsFun(6)">6</button>
+
+        <button onclick="operationFun('+')">+</button>
+
+        <button class="nums" onclick="numsFun(7)">7</button>
+        <button class="nums" onclick="numsFun(8)">8</button>
+        <button class="nums" onclick="numsFun(9)">9</button>
+
+        <button onclick="operationFun('-')">-</button>
+
+        <button class="" onclick="retainSingleDot()">.</button>
+        <button class="" onclick="numsFun(0)">0</button>
+        <button class="col-span-2" onclick="equal()">=</button>
+      </div>
+    </main>
+
+    <script>
+      let previousOperand = document.getElementById("previousOperand");
+      let nums = document.querySelector(".nums");
+      let previousNumber = [];
+
+      let currentOperand = document.getElementById("currentOperand");
+      let operation_btn = document.getElementById("operation_btn");
+      let operation = document.getElementById("operation");
+      let _currentOperand = false;
+      let currentNumber = [];
+
+      let warning_or_result = document.getElementById("warning_or_result");
+      let result_eval = false;
+
+      // Delete duplicate points.
+      function retainSingleDot() {
+        numsFun(".");
+
+        // currentOperand
+        if (_currentOperand) {
+          const str = currentNumber.join("");
+          const firstDotIndex = str.indexOf(".");
+
+          let newStr = str.replace(/\./g, "");
+
+          if (firstDotIndex !== -1) {
+            newStr =
+              newStr.slice(0, firstDotIndex) +
+              "." +
+              newStr.slice(firstDotIndex);
+          }
+          currentNumber = [...newStr];
+          currentOperand.innerText = checkComma(currentNumber.join(""));
+          return newStr;
+        }
+
+        // previousOperand
+        const str = previousNumber.join("");
+        const firstDotIndex = str.indexOf(".");
+
+        let newStr = str.replace(/\./g, "");
+        if (firstDotIndex !== -1) {
+          newStr =
+            newStr.slice(0, firstDotIndex) + "." + newStr.slice(firstDotIndex);
+        }
+
+        previousNumber = [...newStr];
+        previousOperand.innerText = checkComma(previousNumber.join(""));
+        return newStr;
+      }
+
+      // Write down all the numbers.
+      function numsFun(num) {
+        warning_or_result_Fun(true);
+        result_eval && deleteAllFun();
+
+        // currentOperand
+        if (_currentOperand) {
+          const cut = currentNumber.indexOf(".");
+          const start = currentNumber.slice(0, cut + 1);
+          const end = currentNumber.slice(cut + 1);
+          if (
+            currentNumber.length >= 16 &&
+            (start.length >= 16 || end.length >= 10)
+          )
+            return;
+          if (
+            currentOperand.textContent == 0 &&
+            num == "." &&
+            currentOperand.innerText.length == 1
+          ) {
+            currentNumber = [];
+            currentNumber.push("0.");
+          } else {
+            currentNumber.push(num);
+          }
+
+          if (
+            /0\d*/g.test(currentOperand.innerText) &&
+            currentOperand.innerText.length == 1 &&
+            num != "."
+          ) {
+            currentNumber = [];
+            currentNumber.push(num);
+          }
+
+          currentOperand.innerText = checkComma(currentNumber.join(""));
+          return;
+        }
+
+        // previousOperand
+
+        const cut = previousNumber.indexOf(".");
+        const start = previousNumber.slice(0, cut + 1);
+        const end = previousNumber.slice(cut + 1);
+
+        if (
+          previousNumber.length >= 16 &&
+          (start.length >= 16 || end.length >= 10)
+        )
+          return;
+        if (
+          previousOperand.textContent == 0 &&
+          num == "." &&
+          previousOperand.innerText.length == 1
+        ) {
+          previousNumber = [];
+          previousNumber.push("0.");
+        } else {
+          previousNumber.push(num);
+        }
+
+        if (
+          /0\d*/g.test(previousOperand.innerText) &&
+          previousOperand.innerText.length == 1 &&
+          num != "."
+        ) {
+          previousOperand.innerText = "";
+          previousNumber = [];
+          previousNumber.push(num);
+        }
+
+        previousOperand.innerText = checkComma(previousNumber.join(""));
+
+        return;
+      }
+
+      // Write arithmetic marks. And hide the error section, 10 / 0 =>  Cannot divide by zero.
+      function operationFun(_operation) {
+        warning_or_result_Fun(true);
+        if (_currentOperand) {
+          equal();
+        }
+
+        currentNumber = [];
+        result_eval = false;
+        _currentOperand = true;
+        currentOperand.innerText = "0";
+        operation.innerText = _operation;
+        return;
+      }
+
+      // The result of mathmetical operations.
+      function equal() {
+        const res_operation =
+          operation.innerText == "÷" ? "/" : operation.innerText;
+        let result =
+          previousOperand.innerText + res_operation + currentOperand.innerText;
+
+        if (currentOperand.innerText == "0" && operation.innerText == "÷") {
+          warning_or_result_Fun(false);
+          previousOperand.innerText = "";
+        } else {
+          previousOperand.innerText = eval(result).toFixed(2);
+        }
+
+        result_eval = true;
+        operation.innerText = "";
+        previousNumber = [];
+        currentNumber = [];
+        currentOperand.innerText = "";
+      }
+
+      // Delete a number.
+      function deleteFun() {
+        let check = _currentOperand ? currentOperand : previousOperand;
+        let check_number = _currentOperand ? currentNumber : previousNumber;
+
+        if (check.innerText.length == 1) {
+          if (_currentOperand) {
+            currentOperand.innerText = 0;
+            currentNumber = [];
+            return;
+          }
+          previousOperand.innerText = 0;
+          previousNumber = [];
+          return;
+        }
+
+        // 00
+        const filter_comma = delete_comma(check.innerText);
+        const res = filter_comma.substr(0, filter_comma.length - 1);
+        if (_currentOperand) {
+          currentOperand.innerText = checkComma(res);
+          currentNumber = [...res];
+          return;
+        }
+        previousOperand.innerText = checkComma(res);
+        previousNumber = [...res];
+        return;
+      }
+
+      // Delete all numbers.
+      function deleteAllFun() {
+        warning_or_result_Fun(true);
+
+        previousNumber = [];
+        operation.innerText = "";
+        previousOperand.innerText = "0";
+
+        currentNumber = [];
+        _currentOperand = false;
+        currentOperand.innerText = "";
+        result_eval = false;
+        return;
+      }
+
+      // Show and hide the error section.
+      function warning_or_result_Fun(hidden) {
+        warning_or_result.style.display = hidden ? "none" : "block";
+      }
+
+      function checkComma(num) {
+        const cut = num.indexOf(".");
+        const start = num.slice(0, cut + 1);
+        const end = num.slice(cut + 1);
+
+        if (cut != -1) {
+          return start.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + end;
+        }
+
+        if (num >= 1) {
+          return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        return num;
+      }
+
+      function delete_comma(num) {
+        return num.replace(/,/g, "");
+      }
+    </script>
+  </body>
+</html>
